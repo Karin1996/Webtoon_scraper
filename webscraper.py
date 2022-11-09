@@ -8,7 +8,6 @@ import time
 from tqdm import tqdm
 
 url = "https://www.webtoons.com/en/dailySchedule"
-total_webtoons = 0
 #How many webtoons to scrape. If None get all the webtoons the scraper can find
 amount_to_scrape = None
 #Set of the genres
@@ -17,7 +16,6 @@ genres = set()
 hrefs = set()
 
 
-#define function
 def ConvertToNumber(fakeNum):
     number = ''
 
@@ -41,10 +39,6 @@ def ConvertToNumber(fakeNum):
 response = requests.get(url)
 #All the html on the page
 all_info = BeautifulSoup(response.content, "html.parser")
-
-
-#Get the amount of webtoons scraped
-total_results = len(all_info.find_all("a", class_="daily_card_item"))
 
 
 #Get all the genres
