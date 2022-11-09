@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import json
 from pprint import pprint
 import pandas as pd
+import numpy as np
 import time
 from tqdm import tqdm
 
@@ -55,7 +56,7 @@ for genre in genre_results:
 #Define dictionary with the correct genres
 webtoon_dictionary = {}
 for entry in genres:
-    webtoon_dictionary[entry] = {"total_webtoons": 0, "average_subscribers": [], "average_grade": [], "completed": 0, "average_chapters": []}
+    webtoon_dictionary[entry] = {"total_webtoons": 0, "average_subscribers": [], "median_subscribers": [], "average_grade": [], "median_grade": [], "completed": 0, "average_chapters": [], "median_chapters": []}
 
 
 #Get all the hrefs, add to list (for getting grading and chapters later on)
@@ -99,29 +100,41 @@ for href in tqdm(hrefs):
             webtoon_dictionary[key]["total_webtoons"] += 1
             webtoon_dictionary[key]["average_subscribers"] += [webtoon_subscribers]
             webtoon_dictionary[key]["average_grade"] += [webtoon_grade]
+            webtoon_dictionary[key]["median_subscribers"] += [webtoon_subscribers]
+            webtoon_dictionary[key]["median_grade"] += [webtoon_grade]
 
             if status == "completed":
                 webtoon_chapters = page_content.find("span", class_="tx")
                 webtoon_chapters = int(webtoon_chapters.text.replace("#", ""))
                 webtoon_dictionary[key]["completed"] += 1
-                webtoon_dictionary[key]["average_chapters"] += [webtoon_chapters]   
+                webtoon_dictionary[key]["average_chapters"] += [webtoon_chapters] 
+                webtoon_dictionary[key]["median_chapters"] += [webtoon_chapters]  
     
     #print(counter, amount_to_scrape)
     time.sleep(0.5)
 
 
-#Calculate averages from information in dictionary arrays
+#Calculate averages and medians from information in dictionary arrays
 for key in webtoon_dictionary:
     
     if webtoon_dictionary[key]["total_webtoons"] > 0:
+        #Median likes in this genre
+        webtoon_dictionary[key]["median_subscribers"] = round(np.median(webtoon_dictionary[key]["median_subscribers"]))
         #Average likes in this genre
         webtoon_dictionary[key]["average_subscribers"] = round(sum(webtoon_dictionary[key]["average_subscribers"]) / webtoon_dictionary[key]["total_webtoons"])
+
+        #Median grade in this genre
+        webtoon_dictionary[key]["median_grade"] = round(float(np.median(webtoon_dictionary[key]["median_grade"])), 2)
+
         #Average grade in this genre
         webtoon_dictionary[key]["average_grade"] = round(sum(webtoon_dictionary[key]["average_grade"]) / webtoon_dictionary[key]["total_webtoons"], 2)
     
     if webtoon_dictionary[key]["completed"] > 0:
+        #Median chapters in this genre
+        webtoon_dictionary[key]["median_chapters"] = round(np.median(webtoon_dictionary[key]["median_chapters"]))
         #Average chapters in this genre (only completed webtoons) (if webtoon is "completed" add chapter count to list, then calculate average)
         webtoon_dictionary[key]["average_chapters"] = round(sum(webtoon_dictionary[key]["average_chapters"]) / webtoon_dictionary[key]["completed"])
+
 
 
 #Save to a json file
@@ -133,12 +146,19 @@ data_frame = pd.DataFrame({
     "Genre": webtoon_dictionary.keys(),
     "Total Webtoons": [row["total_webtoons"] for row in webtoon_dictionary.values()],
     "Average Subscribers": [row["average_subscribers"] for row in webtoon_dictionary.values()],
+    "Median Subscribers": [row["median_subscribers"] for row in webtoon_dictionary.values()],
     "Average Grade": [row["average_grade"] for row in webtoon_dictionary.values()],
+    "Median Grade": [row["median_grade"] for row in webtoon_dictionary.values()],
     "Total Completed": [row["completed"] for row in webtoon_dictionary.values()],
     "Average Chapters": [row["average_chapters"] for row in webtoon_dictionary.values()],
+    "Median Chapters": [row["median_chapters"] for row in webtoon_dictionary.values()],
 })
 data_frame["Average Subscribers"] = data_frame["Average Subscribers"].apply(lambda x: "" if x == [] else x)
 data_frame["Average Grade"] = data_frame["Average Grade"].apply(lambda x: "" if x == [] else x)
 data_frame["Average Chapters"] = data_frame["Average Chapters"].apply(lambda x: "" if x == [] else x)
+
+data_frame["Median Subscribers"] = data_frame["Median Subscribers"].apply(lambda x: "" if x == [] else x)
+data_frame["Median Grade"] = data_frame["Median Grade"].apply(lambda x: "" if x == [] else x)
+data_frame["Median Chapters"] = data_frame["Median Chapters"].apply(lambda x: "" if x == [] else x)
 
 data_frame.to_csv("webtoon_information.csv", header=True, index=False)
