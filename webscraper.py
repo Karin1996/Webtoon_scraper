@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from pprint import pprint
+#from pprint import pprint
 import pandas as pd
 import numpy as np
 import time
@@ -90,6 +90,7 @@ for href in tqdm(hrefs):
     
     #Add information to correct genre in dictionary
     for key in webtoon_dictionary:
+        
         if key == webtoon_genre:
             webtoon_dictionary[key]["total_webtoons"] += 1
             webtoon_dictionary[key]["average_subscribers"] += [webtoon_subscribers]
@@ -110,7 +111,7 @@ for href in tqdm(hrefs):
 
 #Calculate averages and medians from information in dictionary arrays
 for key in webtoon_dictionary:
-    
+
     if webtoon_dictionary[key]["total_webtoons"] > 0:
         #Median likes in this genre
         webtoon_dictionary[key]["median_subscribers"] = round(np.median(webtoon_dictionary[key]["median_subscribers"]))
@@ -131,7 +132,7 @@ for key in webtoon_dictionary:
 
 
 
-#Save to a json file
+#Save to a JSON file
 with open("webtoon_information.json", "w") as file:
     json.dump(webtoon_dictionary, file)
 
